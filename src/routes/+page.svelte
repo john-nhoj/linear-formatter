@@ -1,75 +1,74 @@
 <script lang="ts">
-  import {enhance} from '$app/forms'
-
-  function enhanceForm() {
-    validatingApiKey = true
-    return async function ({result}) {
-      if (result.type !== 'success') {
-        errorMessage = 'Invalid API key. Please verify you are using the correct key.'
-      }
-      validatingApiKey = false
+  async function copyToClipboard() {
+    const notes = document.getElementById('notes')
+    const content = notes.innerHTML
+    const blob = new Blob([content], {type: 'text/html'})
+    const richTextInput = new ClipboardItem({'text/html': blob})
+    try {
+      await navigator.clipboard.write([richTextInput])
+    } catch (e) {
+      errorMessage = 'Copying to clipboard failed... Try again later!'
+    } finally {
+      console.info('Notes copied to clipboard successfully')
     }
   }
 
-  function handleGeneration() {
-    generatingReleaseNotes = true
-    return async function ({result}) {
-      if (result.type !== 'success') {
-        errorMessage = 'Something went wrong. Please try again.'
-      }
-      releaseNotes = result.data
-      debugger
-      generatingReleaseNotes = false
-    }
-  }
-
-  export let apiKey = ''
-  export let errorMessage = ''
-  export let validatingApiKey = false
-  export let generatingReleaseNotes = false
-  export let labelSelections = [
+  export let data
+  let apiKey = data?.apiKey || ''
+  let errorMessage = data?.errorMessage || ''
+  let labelSelections = [
     {
-      id: '1',
-      name: 'Label 1'
+      id: 'Bug',
+      name: 'Bug',
     },
     {
-      id: '2',
-      name: 'Label 2'
+      id: 'Feature',
+      name: 'Feature',
     },
-    {
-      id: '3',
-      name: 'Label 3'
-    }
   ]
-  export let releaseNotes
+  let releaseNotes
 </script>
 
 <title>Linear Formatter</title>
 <h1>Linear Formatter</h1>
-<form method="post" action="?/validateApiKey" use:enhance={enhanceForm}>
+<form>
   <label for="api-key">API Key:</label>
-  <input type="text" name="api-key" id="api-key" bind:value={apiKey} disabled={validatingApiKey}>
-  <button>Validate</button>
-</form>
-
-<form method="post" action="?/generate" use:enhance={handleGeneration}>
+  <input type="text" name="api-key" id="api-key" bind:value={apiKey}>
+  <input type="text" name="api-key" value={apiKey}>
   <label for="label-select">Labels</label>
-  <select name="label-select" id="label-select" multiple>
+  <select name="labels" id="label-select" multiple>
     {#each labelSelections as label}
       <option value={label.id}>{label.name}</option>
     {/each}
   </select>
-  <button type="submit" disabled={generatingReleaseNotes}>Generate</button>
+  <button type="submit">Generate</button>
 </form>
 
 {#if errorMessage}
   <p>{errorMessage}</p>
 {/if}
 
-{#if generatingReleaseNotes}
-  <p>Generating release notes...</p>
-{/if}
-
 {#if releaseNotes}
   <p>{JSON.stringify(releaseNotes)}</p>
 {/if}
+
+<p>{JSON.stringify(data)}</p>
+
+<article id="notes">
+  <ul>
+    {#each Object.entries(data.data) as [label, {nodes}] (label)}
+      <li>
+        {label}
+        <ul>
+          {#each nodes as {url, identifier, title} (identifier)}
+            <li>
+              <a href={url}>[{identifier}] {title}</a>
+            </li>
+          {/each}
+        </ul>
+      </li>
+    {/each}
+  </ul>
+</article>
+
+<button on:click={copyToClipboard}>Copy</button>
