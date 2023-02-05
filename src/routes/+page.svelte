@@ -52,23 +52,24 @@
   <p>{JSON.stringify(releaseNotes)}</p>
 {/if}
 
-<p>{JSON.stringify(data)}</p>
+{#if data.data}
+  <article id="notes">
+    <ul>
+      {#each Object.entries(data.data) as [label, {nodes}] (label)}
+        <li>
+          {label}
+          <ul>
+            {#each nodes as {url, identifier, title} (identifier)}
+              <li>
+                <a href={url}>[{identifier}] {title}</a>
+              </li>
+            {/each}
+          </ul>
+        </li>
+      {/each}
+    </ul>
+  </article>
 
-<article id="notes">
-  <ul>
-    {#each Object.entries(data.data) as [label, {nodes}] (label)}
-      <li>
-        {label}
-        <ul>
-          {#each nodes as {url, identifier, title} (identifier)}
-            <li>
-              <a href={url}>[{identifier}] {title}</a>
-            </li>
-          {/each}
-        </ul>
-      </li>
-    {/each}
-  </ul>
-</article>
+  <button on:click={copyToClipboard}>Copy</button>
 
-<button on:click={copyToClipboard}>Copy</button>
+{/if}
