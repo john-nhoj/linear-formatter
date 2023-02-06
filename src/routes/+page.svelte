@@ -34,7 +34,6 @@
 <form>
   <label for="api-key">API Key:</label>
   <input type="text" name="api-key" id="api-key" bind:value={apiKey}>
-  <input type="text" name="api-key" value={apiKey}>
   <label for="label-select">Labels</label>
   <select name="labels" id="label-select" multiple>
     {#each labelSelections as label}
@@ -52,19 +51,23 @@
   <p>{JSON.stringify(releaseNotes)}</p>
 {/if}
 
-{#if data.data}
+{#if data.result}
   <article id="notes">
     <ul>
-      {#each Object.entries(data.data) as [label, {nodes}] (label)}
+      {#each Object.entries(data.result) as [label, {nodes}] (label)}
         <li>
           {label}
-          <ul>
-            {#each nodes as {url, identifier, title} (identifier)}
-              <li>
-                <a href={url}>[{identifier}] {title}</a>
-              </li>
-            {/each}
-          </ul>
+          {#if nodes.length > 0}
+            <ul>
+              {#each nodes as {url, identifier, title} (identifier)}
+                <li>
+                  <a href={url}>[{identifier}] {title}</a>
+                </li>
+              {/each}
+            </ul>
+          {:else}
+            <p>No issues found</p>
+          {/if}
         </li>
       {/each}
     </ul>
