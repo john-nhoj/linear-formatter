@@ -73,11 +73,11 @@ export const load: PageLoad = async ({url, fetch}) => {
     apiKey,
     filters: {
       cycles: {
-        options: filtersJson.data.cycles.nodes.map((node: { number: number }) => node.number),
+        options: filtersJson.data.cycles.nodes.map((node: { number: number}) => ({id: node.number, name: `Cycle ${node.number}`})),
         selected: cycle,
       },
       labels: {
-        options: filtersJson.data.issueLabels.nodes.map((node: { name: string }) => node.name),
+        options: filtersJson.data.issueLabels.nodes.map((node: { name: string }) => ({id: node.name, name: node.name})),
         selected: labels,
       }
     },
