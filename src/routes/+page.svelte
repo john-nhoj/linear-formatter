@@ -34,7 +34,7 @@
     {/each}
   </select>
   <label for="cycle-select">Cycle:</label>
-  <select bind:value={selectedCycle} name="cycle" id="cycle-select">
+  <select bind:value={selectedCycle} name="cycle" id="cycle-select" class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
     {#each cycleSelections as cycle}
       <option value={cycle.id}>{cycle.name}</option>
     {/each}
