@@ -6,9 +6,10 @@ export const load: PageLoad = async ({url, fetch}) => {
   if (!apiKey) {
     return {}
   }
-  const cycle = url.searchParams.get('cycle') || 'isActive'
+  const cycle = url.searchParams.get('cycle')
   const labels = url.searchParams.getAll('labels')
   const statuses = url.searchParams.getAll("status")
+  const shouldSearch = cycle && labels.length > 0
   if (statuses.length === 0) {
     statuses.push('Done')
   }
@@ -26,7 +27,7 @@ export const load: PageLoad = async ({url, fetch}) => {
       null,
     )
   ]
-  if (labels.length > 0) {
+  if (shouldSearch) {
     queries.push(gql.query([
           ...labels.map(label => ({
                 operation: {name: 'issues', alias: label,},
@@ -36,7 +37,7 @@ export const load: PageLoad = async ({url, fetch}) => {
                     name: 'filter',
                     type: 'IssueFilter',
                     value: {
-                      cycle: {[cycle]: {eq: true}},
+                      cycle: {number: {eq: Number(cycle)}},
                       state: {name: {in: statuses}},
                       labels: {name: {eq: label}},
                     }
@@ -73,8 +74,8 @@ export const load: PageLoad = async ({url, fetch}) => {
     apiKey,
     filters: {
       cycles: {
-        options: filtersJson.data.cycles.nodes.map((node: { number: number}) => ({id: node.number, name: `Cycle ${node.number}`})),
-        selected: cycle,
+        options: filtersJson.data.cycles.nodes.sort((a: { number: number; }, b: { number: number; }) => b.number > a.number).map((node: { number: number}) => ({id: node.number, name: `Cycle ${node.number}`})),
+        selected: Number(cycle) || filtersJson.data.cycles.nodes[0].number,
       },
       labels: {
         options: filtersJson.data.issueLabels.nodes.map((node: { name: string }) => ({id: node.name, name: node.name})),
@@ -83,7 +84,7 @@ export const load: PageLoad = async ({url, fetch}) => {
     },
     search: {},
   }
-  if (labels.length > 0) {
+  if (shouldSearch) {
     const searchJson = await searchResponse.json()
     body.search = searchJson.data
   }
