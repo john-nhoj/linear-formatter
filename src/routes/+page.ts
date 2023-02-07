@@ -13,68 +13,46 @@ export const load: PageLoad = async ({url, fetch}) => {
   if (statuses.length === 0) {
     statuses.push('Done')
   }
-  const queries = [
-    gql.query([
-        {
-          operation: 'cycles',
-          fields: [{nodes: ['number']}]
-        },
-        {
-          operation: 'issueLabels',
-          fields: [{nodes: ['name']}]
-        },
-      ],
-      null,
-    )
-  ]
-  if (shouldSearch) {
-    queries.push(gql.query([
-          ...labels.map(label => ({
-                operation: {name: 'issues', alias: label,},
-                fields: [{nodes: ['title', 'identifier', 'url']}],
-                variables: {
-                  [`${label.toLowerCase()}Filter`]: {
-                    name: 'filter',
-                    type: 'IssueFilter',
-                    value: {
-                      cycle: {number: {eq: Number(cycle)}},
-                      state: {name: {in: statuses}},
-                      labels: {name: {eq: label}},
-                    }
-                  }
-                }
-              }
-            )
-          ),
-        ]
-      )
-    )
-  }
-  const [filtersResponse, searchResponse] = await Promise.all(queries.map(query => fetch('https://api.linear.app/graphql', {
+  const filtersQuery = gql.query([
+      {
+        operation: 'cycles',
+        fields: [{nodes: ['number']}]
+      },
+      {
+        operation: 'issueLabels',
+        fields: [{nodes: ['name']}]
+      },
+    ],
+  )
+  const filtersResponse = await fetch('https://api.linear.app/graphql', {
     method: 'POST',
     headers: {
       'Authorization': apiKey,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(query)
-  })))
+    body: JSON.stringify(filtersQuery)
+  })
   if (!filtersResponse.ok && filtersResponse.status === 400) {
-    const {errors} = await filtersResponse.json()
+    const data = await filtersResponse.json()
     return {
-      errorMessage: errors[0].message,
+      errorMessage: data.errors[0].message,
       apiKey,
     }
   }
   const filtersJson = await filtersResponse.json()
   const body: {
     apiKey: string,
-    filters: {cycles: {options: Array<number>, selected: string}, labels: {options: Array<string>, selected: Array<string>}},
-    search: Record<string, {nodes: {url: string, identifier: string, title: string}}>
+    filters: { cycles: { options: Array<number>, selected: string }, labels: { options: Array<string>, selected: Array<string> } },
+    search?: Record<string, { nodes: { url: string, identifier: string, title: string } }>
+    errorMessage?: string,
   } = {
     apiKey,
     filters: {
       cycles: {
-        options: filtersJson.data.cycles.nodes.sort((a: { number: number; }, b: { number: number; }) => b.number > a.number).map((node: { number: number}) => ({id: node.number, name: `Cycle ${node.number}`})),
+        options: filtersJson.data.cycles.nodes.sort((a: { number: number; }, b: { number: number; }) => b.number > a.number).map((node: { number: number }) => ({
+          id: node.number,
+          name: `Cycle ${node.number}`
+        })),
         selected: Number(cycle) || filtersJson.data.cycles.nodes[0].number,
       },
       labels: {
@@ -82,9 +60,41 @@ export const load: PageLoad = async ({url, fetch}) => {
         selected: labels,
       }
     },
-    search: {},
   }
   if (shouldSearch) {
+    const searchQuery = gql.query([
+        ...labels.map(label => ({
+              operation: {name: 'issues', alias: label,},
+              fields: [{nodes: ['title', 'identifier', 'url']}],
+              variables: {
+                [`${label.toLowerCase()}Filter`]: {
+                  name: 'filter',
+                  type: 'IssueFilter',
+                  value: {
+                    cycle: {number: {eq: Number(cycle)}},
+                    state: {name: {in: statuses}},
+                    labels: {name: {eq: label}},
+                  }
+                }
+              }
+            }
+          )
+        )
+      ]
+    )
+    const searchResponse = await fetch('https://api.linear.app/graphql', {
+      method: 'POST',
+      headers: {
+        'Authorization': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(searchQuery)
+    })
+    if (!searchResponse.ok) {
+      const {errors} = await searchResponse.json()
+      body.errorMessage = errors[0].message
+      return body
+    }
     const searchJson = await searchResponse.json()
     body.search = searchJson.data
   }

@@ -16,10 +16,10 @@
   export let data
   let apiKey = data?.apiKey || ''
   let errorMessage = data?.errorMessage || ''
-  let selectedLabels = data?.filters.labels.selected || []
-  let labelSelections = data?.filters.labels.options || []
-  let cycleSelections = data?.filters.cycles.options || []
-  let selectedCycle = data?.filters.cycles.selected
+  let selectedLabels = data?.filters?.labels.selected || []
+  let labelSelections = data?.filters?.labels.options || []
+  let cycleSelections = data?.filters?.cycles.options || []
+  let selectedCycle = data?.filters?.cycles.selected
 </script>
 
 <title>Linear Formatter</title>
