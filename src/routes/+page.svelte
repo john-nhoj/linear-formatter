@@ -17,16 +17,7 @@
   let apiKey = data?.apiKey || ''
   let errorMessage = data?.errorMessage || ''
   let selectedLabels = data?.filters.labels.selected || []
-  let labelSelections = [
-    {
-      id: 'Bug',
-      name: 'Bug',
-    },
-    {
-      id: 'Feature',
-      name: 'Feature',
-    },
-  ]
+  let labelSelections = data?.filters.labels.options || []
 </script>
 
 <title>Linear Formatter</title>
