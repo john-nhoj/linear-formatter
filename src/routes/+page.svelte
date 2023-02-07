@@ -16,6 +16,7 @@
   export let data
   let apiKey = data?.apiKey || ''
   let errorMessage = data?.errorMessage || ''
+  let selectedLabels = data?.filters.labels.selected || []
   let labelSelections = [
     {
       id: 'Bug',
@@ -26,7 +27,6 @@
       name: 'Feature',
     },
   ]
-  let releaseNotes
 </script>
 
 <title>Linear Formatter</title>
@@ -35,26 +35,20 @@
   <label for="api-key">API Key:</label>
   <input type="text" name="api-key" id="api-key" bind:value={apiKey}>
   <label for="label-select">Labels</label>
-  <select name="labels" id="label-select" multiple>
+  <select bind:value={selectedLabels} multiple name="labels" id="label-select">
     {#each labelSelections as label}
       <option value={label.id}>{label.name}</option>
     {/each}
   </select>
   <button type="submit">Generate</button>
 </form>
-
 {#if errorMessage}
   <p>{errorMessage}</p>
 {/if}
-
-{#if releaseNotes}
-  <p>{JSON.stringify(releaseNotes)}</p>
-{/if}
-
-{#if data.result}
+{#if data.search}
   <article id="notes">
     <ul>
-      {#each Object.entries(data.result) as [label, {nodes}] (label)}
+      {#each Object.entries(data.search) as [label, {nodes}] (label)}
         <li>
           {label}
           {#if nodes.length > 0}
@@ -72,7 +66,5 @@
       {/each}
     </ul>
   </article>
-
   <button on:click={copyToClipboard}>Copy</button>
-
 {/if}
